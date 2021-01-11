@@ -70,7 +70,7 @@ if variable == 3:
 
 
 fig, ax = plt.subplots()
-fig.suptitle(variable, fontsize=10)
+fig.suptitle(name, fontsize=10)
 for i in range(int(n_im/factor)):
 	# Lecture of each data at simulation time 
 	Prim[i] = np.fromfile("DATA/Primitive"+str(i*factor)+".dat",
