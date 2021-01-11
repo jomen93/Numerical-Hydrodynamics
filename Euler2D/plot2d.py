@@ -34,13 +34,19 @@ x_m = round(np.max(x),1)
 y_m = round(np.max(y),1)
 
 # definition variable to animate
-density    = 0
-x_velocity = 1
-y_velocity = 2
-presion    = 3
+density       = 0
+x_velocity    = 1
+y_velocity    = 2
+presion       = 3
+# derived variables
+norm_velocity = 5
+Temperature   = 6
 
 # choose variable
-variable = density
+# when using a job file to compile all plots
+# variable = sys.argv[0]
+# manual plot
+variable = Temperature
 
 # array definition of Hidrodynamics variables
 Prim = np.zeros((n_im, neqs, Nx, Ny))
@@ -54,42 +60,102 @@ print("system size = ", Nx)
 print("Number if iterations = ", n_im)
 
 print("")
-if variable == 0:
-	name = "density"
+
+if variable == density:
+	name       = "density" 
+	title_plot = '$\\rho$'
+	units_plot = '$\\rho[\\frac{g}{cm^{3}}]$'
 	print("Begins 2D animation of density")
-if variable == 1:
-	name = "x-velocity"
+if variable == x_velocity:
+	name     = "x-velocity" 
+	title_plot = '$v_{x}$'
+	units_plot = '$v_{x}[\\frac{m}{s}]$'
 	print("Begins 2D animation of x-velocity")
-if variable == 2:
-	name = "y_velocity"
+if variable == y_velocity:
+	name      = "y_velocity"
+	title_plot = '$v_{y}$'
+	units_plot = '$v_{y}[\\frac{m}{s}]$'
 	print("Begins 2D animation of y-velocity")
-if variable == 3:
-	name = "presion"
+if variable == presion:
+	name     = "presion"
+	title_plot = '$P$'
+	units_plot = '$P[Pa]$'
 	print("Begins 2D animation of presion")
-
-
+if variable == norm_velocity:
+	name     = "Norm Velocity"
+	title_plot = '$|v|$'
+	units_plot = '$v[\\frac{m}{s}]$'
+	print("Begins 2D animation of norm velocity")
+if variable == Temperature:
+	name     = "Temperature"
+	title_plot = '$T$'
+	units_plot = '$T[^{o}K]$'
+	print("Begins 2D animation of Temperature")
 
 fig, ax = plt.subplots()
 fig.suptitle(name, fontsize=10)
+interpolation = "gaussian"
+
 for i in range(int(n_im/factor)):
 	# Lecture of each data at simulation time 
 	Prim[i] = np.fromfile("DATA/Primitive"+str(i*factor)+".dat",
 						  dtype="d",
 						  count=neqs*Nx*Ny).reshape((neqs, Nx, Ny))
-	 
-	im = ax.imshow(Prim[i, variable, :, :].T, 
-			           cmap="inferno", 
+
+	if variable == density:
+		im = ax.imshow(Prim[i, variable, :, :].T, 
+				           cmap="Blues",
+				           norm=LogNorm(), 
+				           extent=[0, x_m, 0, y_m],
+				           interpolation=interpolation
+				           )
+	if variable == x_velocity:
+		im = ax.imshow(Prim[i, variable, :, :].T, 
+			           cmap="seismic",
+			           norm=None, 
+			           extent=[0, x_m, 0, y_m],
+			           interpolation=interpolation
+			           )
+		
+	if variable == y_velocity:
+		im = ax.imshow(Prim[i, variable, :, :].T, 
+			           cmap="seismic",
+			           norm=None, 
+			           extent=[0, x_m, 0, y_m],
+			           interpolation=interpolation
+			           )
+		
+	if variable == presion:
+		im = ax.imshow(Prim[i, variable, :, :].T, 
+			           cmap="inferno",
 			           norm=LogNorm(), 
 			           extent=[0, x_m, 0, y_m],
-			           interpolation="gaussian"
+			           interpolation=interpolation
 			           )
+		
+	if variable == norm_velocity:
+		im = ax.imshow(np.sqrt(Prim[i, x_velocity, :, :].T**2 + Prim[i, y_velocity, :, :].T**2), 
+			           cmap="seismic",
+			           norm=None, 
+			           extent=[0, x_m, 0, y_m],
+			           interpolation=interpolation
+			           )
+		
+	if variable == Temperature:
+		im = ax.imshow(Prim[i, presion, :, :].T/Prim[i, density, :, :].T, 
+			           cmap="jet",
+			           norm=None, 
+			           extent=[0, x_m, 0, y_m],
+			           interpolation=interpolation
+			           )
+		
 	ax.set_xlabel("$x[ cm ]$")
 	ax.set_ylabel("$y[ cm ]$")
 	ax.set_aspect('equal')
 	ims.append([im])
 clb = fig.colorbar(im, extend="both")
-clb.ax.set_title('$\\rho$')
-clb.ax.set_title('$\\rho[\\frac{g}{cm^{3}}]$')
+clb.ax.set_title(title_plot)
+clb.ax.set_title(units_plot)
 ani = animation.ArtistAnimation(fig, ims, 
 								interval=1, 
 								blit=False,
