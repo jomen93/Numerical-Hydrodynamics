@@ -57,7 +57,7 @@ def an(var, var_name):
 
 
 
-	# create function to update the line
+	# create function to update the lineø
 	def animate(i):
 		im = np.fromfile("DATA/Primitive"+str(i*factor)+".dat",
 				 dtype="d",

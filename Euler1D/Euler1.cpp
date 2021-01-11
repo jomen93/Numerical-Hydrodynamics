@@ -19,11 +19,11 @@ const int Method = MUSCL_METHOD;
 // numerical difusivity
 // const double beta = 0.1;
 // system size
-const int Nx = 256;
+const int Nx = 128;
 // number equations
 const int neqs = 3;
 // Courant constant
-const double C = 0.9;
+const double C = 0.5;
 // adiabatic constant 
 const double gam = 1.4;
 // initial point x-axis
@@ -338,11 +338,13 @@ void HLLC()
 		}
 	}
 }
+
+
 void MUSCL()
 {
 	double m; 
 	double phi;
-	for (int i = 0; i <=Nx ; ++i)
+	for (int i = 1; i <=Nx+1 ; ++i)
 	{
 		for (int n = 0; n < neqs; ++n)
 		{
@@ -352,8 +354,17 @@ void MUSCL()
 			s = copysign(1.0, deltaL);
 			m = min(fabs(deltaL),s * deltaR);
 			phi = max(0.0, m);
+			
+			P[n][i] = P[n][i] + 0.5*phi;
 
-			P[n][i] = P[n][i] +0.5*phi;
+			deltaL = P[n][i+1] - P[n][i];
+			deltaR = P[n][i+2] - P[n][i+1];			
+
+			s = copysign(1.0, deltaL);
+			m = min(fabs(deltaL),s * deltaR);
+			phi = max(0.0, m);
+
+			P[n][i+1] = P[n][i+1] - 0.5*phi;
 		}
 	}
 }
@@ -549,7 +560,7 @@ int main()
 				Godunov2();
 				boundary(U);
 				UtoP(U, P);
-				// MUSCL();
+				MUSCL();
 				HLL();
 				Godunov();
 				boundary(U);

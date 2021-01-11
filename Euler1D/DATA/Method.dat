@@ -1,3 +1,5 @@
-Method Lax_Method
+Method MUSCL 
 Nx 128
 neqs 3
+it 267
+factor 3
