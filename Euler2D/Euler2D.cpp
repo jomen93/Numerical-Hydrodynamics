@@ -41,7 +41,7 @@ const double dy = (yf-yo)/(Ny-1);
 // time variable 
 double t = 0.0;
 // final time of simulation 
-double tf = 0.5;
+double tf = 1.0;
 // iteration variable
 int it = 0.0;
 // time step variable 
@@ -123,7 +123,7 @@ void Init_explotion(void)
 		y[j] = yo + (j-1)*dy;
 	}
 	// definition of radius of explosion
-	double r = 0.1;
+	double r = 0.4;
 	double ro;
 	// center of explosion
 	double xc = 0.5*xf;
@@ -199,10 +199,10 @@ void boundary(double U[][Nx+2][Nx+2])
 			// left wall
 			for (int j = 1; j <= Ny; ++j)
 				{
-					U[0][0][j]      =  U[0][1][j];
-					U[1][0][j]      = -U[1][1][j];
-					U[2][0][j]      =  U[2][1][j];
-					U[3][0][j]      =  U[3][1][j];
+					U[0][0][j] =  U[0][1][j];
+					U[1][0][j] = -U[1][1][j];
+					U[2][0][j] =  U[2][1][j];
+					U[3][0][j] =  U[3][1][j];
 				}
 			// right wall
 			for (int j = 1; j <= Ny; ++j)
@@ -234,10 +234,10 @@ void boundary(double U[][Nx+2][Nx+2])
 			// left wall
 			for (int j = 0; j <= Ny+1; ++j)
 				{
-					U[0][0][j]      =  U[0][Nx+1][j];
-					U[1][0][j]      =  U[1][Nx+1][j];
-					U[2][0][j]      =  U[2][Nx+1][j];
-					U[3][0][j]      =  U[3][Nx+1][j];
+					U[0][0][j] =  U[0][Nx+1][j];
+					U[1][0][j] =  U[1][Nx+1][j];
+					U[2][0][j] =  U[2][Nx+1][j];
+					U[3][0][j] =  U[3][Nx+1][j];
 				}
 			// right wall
 			for (int j = 0; j <= Ny+1; ++j)
@@ -253,8 +253,8 @@ void boundary(double U[][Nx+2][Nx+2])
 				// up and down boundaries
 				for (int i = 0; i <= Nx+1; ++i)
 				{
-					U[n][i][0]      = U[n][i][1];
-					U[n][i][Ny+1]   = U[n][i][Ny];
+					U[n][i][0]    = U[n][i][1];
+					U[n][i][Ny+1] = U[n][i][Ny];
 				}
 			}
 		break;

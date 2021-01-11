@@ -9,6 +9,6 @@ rm cylindrical_explosion
 mv *.dat DATA
 
 echo "Initialization of animations"
-python3 plot2d.py
+python3 plot2d.py 
 mv *.gif animations
-echo "Animations done!"
+echo "Animations done!
