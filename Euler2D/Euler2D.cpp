@@ -15,13 +15,13 @@ const int HLLC_METHOD = 5;
 const int MUSCL_METHOD = 6;
 
 // choose integration method
-const int Method = LAX_METHOD;
+const int Method = RUSANOV_METHOD;
 
 // numerical difusivity
 const double beta = 0.1;
 // system size
-const int Nx = 256;
-const int Ny = 256;
+const int Nx = 128;
+const int Ny = 128;
 // number equations
 const int neqs = 4;
 // Courant constant
@@ -41,7 +41,7 @@ const double dy = (yf-yo)/(Ny-1);
 // time variable 
 double t = 0.0;
 // final time of simulation 
-double tf = 1.0;
+double tf = 2.0;
 // iteration variable
 int it = 0.0;
 // time step variable 
@@ -64,6 +64,7 @@ double y[Nx+2];
 double U[neqs][Nx+2][Ny+2];
 double U_t[neqs][Nx+2][Ny+2];
 double UP[neqs][Nx+2][Ny+2];
+double UP2[neqs][Nx+2][Ny+2];
 
 // primitive variables
 double P[neqs][Nx+2][Ny+2];
@@ -82,15 +83,27 @@ double s;
 
 // type of boundary conditions
 
-// all boundaries free       ----------------> 1
-const int FREE_BOUNDARIES = 1;
-// all boundaries reflective ----------------> 2
-const int REFLECTIVE_BOUNDARIES = 2;
-// top and bottom boundaries free and   
-// Reflective left and right boundaries ------> 3
-const int TOP_BOTTOM_FREE = 3;
+// right wall
+const int RIGHT_FREE       = 11;
+const int RIGHT_REFLECTIVE = 12;
 
-const int type_boundary = FREE_BOUNDARIES;
+// left wall
+const int LEFT_FREE       = 21;
+const int LEFT_REFLECTIVE = 22;
+
+// top wall
+const int TOP_FREE       = 31;
+const int TOP_REFLECTIVE = 32;
+
+// bottom wall
+const int BOTTOM_FREE       = 41;
+const int BOTTOM_REFLECTIVE = 42;
+
+// walls selection
+const int LEFT   = LEFT_REFLECTIVE;
+const int RIGHT  = RIGHT_REFLECTIVE;
+const int TOP    = TOP_REFLECTIVE;
+const int BOTTOM = BOTTOM_REFLECTIVE;
 
 // set up the system
 void Init_explotion(void)
@@ -174,54 +187,77 @@ void UtoP(double U[][Nx+2][Ny+2], double P[][Nx+2][Ny+2])
 //  here we'll define all boundary conditions
 void boundary(double U[][Nx+2][Nx+2])
 {
-	switch(type_boundary)
+	switch(LEFT)
 	{
-		// all free boundaries
-		case FREE_BOUNDARIES:
+		case LEFT_FREE:
+		{
 			for (int n = 0; n < neqs; ++n)
 			{
-				// left and right boundaries 
 				for (int j = 0; j <= Ny+1; ++j)
 				{
-					U[n][0][j]      = U[n][1][j];
-					U[n][Nx+1][j]   = U[n][Nx][j];
+					U[n][0][j] = U[n][1][j];
 				}
-				// up and down boundaries
+			}
+		}
+		break;
+
+		case LEFT_REFLECTIVE:
+		{
+				for (int j = 0; j <= Ny+1; ++j)
+				{
+					U[0][0][j] = U[0][1][j];
+					U[1][0][j] = -U[1][1][j];
+					U[2][0][j] = U[2][1][j];
+					U[3][0][j] = U[3][1][j];
+				}
+		}
+		break;
+	}
+
+	switch(RIGHT)
+	{
+		case RIGHT_FREE:
+		{
+			for (int n = 0; n < neqs; ++n)
+			{
+				for (int j = 0; j <= Ny+1; ++j)
+				{
+					U[n][Nx+1][j] = U[n][Nx][j];
+				}
+			}
+		}
+		break;
+		
+		case RIGHT_REFLECTIVE:
+		{
+			for (int j = 0; j <= Ny+1; ++j)
+			{
+				U[0][Nx+1][j] = U[0][Nx][j];
+				U[1][Nx+1][j] = -U[1][Nx][j];
+				U[2][Nx+1][j] = U[2][Nx][j];
+				U[3][Nx+1][j] = U[3][Nx][j];
+			}
+		}
+		break;
+
+	}
+
+	switch(TOP)
+	{
+		case TOP_FREE:
+		{
+			for (int n = 0; n < neqs; ++n)
+			{
 				for (int i = 0; i <= Nx+1; ++i)
 				{
-					U[n][i][0]      = U[n][i][1];
-					U[n][i][Ny+1]   = U[n][i][Ny];
+					U[n][i][Ny+1] = U[n][i][Ny];
 				}
 			}
-			break;
-		// all boundaries reflecitves 
-		case REFLECTIVE_BOUNDARIES:
-			// left wall
-			for (int j = 1; j <= Ny; ++j)
-				{
-					U[0][0][j] =  U[0][1][j];
-					U[1][0][j] = -U[1][1][j];
-					U[2][0][j] =  U[2][1][j];
-					U[3][0][j] =  U[3][1][j];
-				}
-			// right wall
-			for (int j = 1; j <= Ny; ++j)
-				{
-					U[0][Nx+1][j] = U[0][Nx][j];
-					U[1][Nx+1][j] = -U[1][Nx][j];
-					U[2][Nx+1][j] = U[2][Nx][j];
-					U[3][Nx+1][j] = U[3][Nx][j];
-				}
-			// bottom wall
-			for (int i = 1; i <= Nx; ++i)
-			{
-				U[0][i][0] = U[0][i][1];
-				U[1][i][0] = U[1][i][1];
-				U[2][i][0] = -U[2][i][1];
-				U[3][i][0] = U[3][i][1];
-					
-			}
-			// top wall
+		}
+		break;
+
+		case TOP_REFLECTIVE:
+		{
 			for (int i = 0; i <= Nx+1; ++i)
 			{
 				U[0][i][Ny+1] = U[0][i][Ny];
@@ -229,34 +265,34 @@ void boundary(double U[][Nx+2][Nx+2])
 				U[2][i][Ny+1] = -U[2][i][Ny];
 				U[3][i][Ny+1] = U[3][i][Ny];
 			}
-			break;
-		case TOP_BOTTOM_FREE:
-			// left wall
-			for (int j = 0; j <= Ny+1; ++j)
-				{
-					U[0][0][j] =  U[0][Nx+1][j];
-					U[1][0][j] =  U[1][Nx+1][j];
-					U[2][0][j] =  U[2][Nx+1][j];
-					U[3][0][j] =  U[3][Nx+1][j];
-				}
-			// right wall
-			for (int j = 0; j <= Ny+1; ++j)
-				{
-					U[0][Nx+1][j] = U[0][0][j];
-					U[1][Nx+1][j] = U[1][0][j];
-					U[2][Nx+1][j] = U[2][0][j];
-					U[3][Nx+1][j] = U[3][0][j];
-				}
-			// upper wall
+		}
+		break;
+	}
+
+	switch(BOTTOM)
+	{
+		case BOTTOM_FREE:
+		{
 			for (int n = 0; n < neqs; ++n)
 			{
-				// up and down boundaries
 				for (int i = 0; i <= Nx+1; ++i)
 				{
-					U[n][i][0]    = U[n][i][1];
-					U[n][i][Ny+1] = U[n][i][Ny];
+					U[n][i][0] = U[n][i][1];
 				}
 			}
+		}
+		break;
+
+		case BOTTOM_REFLECTIVE:
+		{
+			for (int i = 0; i <= Nx+1; ++i)
+			{
+				U[0][i][0] = U[0][i][1];
+				U[1][i][0] = U[1][i][1];
+				U[2][i][0] = -U[2][i][1];
+				U[3][i][0] = U[3][i][1];
+			}
+		}
 		break;
 	}
 }
@@ -377,6 +413,101 @@ void Integration(void)
 					}
 				}	
 			}	
+		}
+		break;
+
+		case RUSANOV_METHOD:
+		{
+			double ur;
+			double ul;
+			double up;
+			double ud;
+
+			double Lambda_x;
+			double Lambda_y;
+
+			UtoP(U, P);
+			Flux(F, G, P);
+
+			for (int i = 0; i <= Nx+1; ++i)
+			{
+				for (int j = 0; j <= Ny+1; ++j)
+				{
+					// sound waves x-direction
+					ul = fabs(P[1][i][j])+sqrt(gam*P[2][i][j]/P[0][i][j]);
+					ur = fabs(P[1][i+1][j])+sqrt(gam*P[2][i+1][j]/P[0][i+1][j]);
+					// Lambda_x = max(ul, ur);
+					
+					if (ur >= ul)
+					{
+						Lambda_x = ur;
+					}	
+					else
+					{
+						Lambda_x = ul;
+					}
+
+					// sound waves in y-direction
+					ud = fabs(P[1][i][j])+sqrt(gam*P[2][i][j]/P[0][i][j]);
+					up = fabs(P[1][i][j+1])+sqrt(gam*P[2][i][j+1]/P[0][i][j+1]);
+					// Lambda_y = max(ud, up);
+
+					if (ud >= up)
+					{
+						Lambda_y = ur;
+					}	
+					else
+					{
+						Lambda_y = ul;
+					}
+
+					// intercell flux in both directions
+					for (int n = 0; n < neqs; ++n)
+					{
+						F_t[n][i][j] = 0.5*(F[n][i][j] + F[n][i+1][j]) - 0.5*Lambda_x*(U[n][i+1][j] - U[n][i][j]);
+						G_t[n][i][j] = 0.5*(G[n][i][j] + G[n][i][j+1]) - 0.5*Lambda_y*(U[n][i][j+1] - U[n][i][j]);
+					}
+				}
+			}
+			// Gonudov scheme of first order in x direction  
+			for (int i = 1; i <= Nx; ++i)
+			{
+				for (int j = 1; j <= Ny; ++j)
+				{
+					for (int n = 0; n < neqs; ++n)
+					{
+						UP2[n][i][j] = U[n][i][j] - 0.5*(dt/dx)*(F_t[n][i][j] - F_t[n][i-1][j]); 
+					}
+				}
+			}
+
+			UtoP(UP2, P);
+			Flux(F, G, P);
+
+			// Godunov scheme of first order in y direction
+			for (int i = 1; i <= Nx; ++i)
+			{
+				for (int j = 1; j <= Ny; ++j)
+				{
+					for (int n = 0; n < neqs; ++n)
+					{
+						UP[n][i][j] = UP2[n][i][j] - 0.5*(dt/dy)*(G_t[n][i][j] - G_t[n][i][j-1]); 
+					}
+				}
+			}
+			
+			// Stepping
+			for (int i = 1; i <= Nx; ++i)
+			{
+				for (int j = 1; j <= Ny; ++j)
+				{
+					for (int n = 0; n < neqs; ++n)
+					{
+						U[n][i][j] = UP[n][i][j];
+					}
+				}
+			}
+		boundary(U);
 		}
 		break;
 	}
@@ -533,8 +664,8 @@ int main()
 	while (t <= tf)
 	// while (it <= 100)
 	{
-		Integration();
 		dt = CFL();
+		Integration();
 		t  += dt;
 		it += 1; 
 		report();
